@@ -1,0 +1,51 @@
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model User {
+  id             Int       @id @default(autoincrement())
+  username       String    @unique
+  password       String
+  nome           String
+  tipo           String    // "Gestor" ou "Programador"
+  nivel          String?   // Junior / Senior
+  departamento   String?   // IT / Marketing / Administracao
+  gestorId       Int?      // se for Programador, aponta para seu gestor
+  tarefasCriadas Task[]    @relation("gestor_tarefas")
+  tarefas        Task[]    @relation("programador_tarefas")
+}
+
+model TipoTarefa {
+  id       Int      @id @default(autoincrement())
+  nome     String
+  descricao String?
+  tarefas  Task[]
+}
+
+model Task {
+  id                 Int       @id @default(autoincrement())
+  descricao          String
+  tipoTarefaId       Int?
+  tipoTarefa         TipoTarefa? @relation(fields: [tipoTarefaId], references: [id])
+
+  gestorId           Int
+  gestor             User       @relation("gestor_tarefas", fields: [gestorId], references: [id])
+
+  programadorId      Int?
+  programador        User?      @relation("programador_tarefas", fields: [programadorId], references: [id])
+
+  ordem              Int
+  storyPoints        Int       @default(0)
+  estado             String    @default("ToDo")
+  
+  dataCriacao        DateTime  @default(now())
+  dataPrevistaInicio DateTime?
+  dataPrevistaFim    DateTime?
+  dataRealInicio     DateTime?
+  dataRealFim        DateTime?
+}
